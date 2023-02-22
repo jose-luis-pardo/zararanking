@@ -25,8 +25,8 @@ public class ReportSummaryServiceImpl implements ReportSummaryService {
          */
 
         String sql = """
-                SELECT count(distinct p.id) as totalProducts, count(distinct o.id) as totalOrders, sum(r.quantity*p.price) as totalSales 
-                FROM (orders o join order_items r on o.id = i.order_id) join products p on p.id = r.product_id
+                SELECT count(distinct p.id) as totalProducts, count(distinct o.id) as totalOrders, sum(i.quantity*p.price) as totalSales 
+                FROM (orders o join order_items i on o.id = i.order_id) join products p on p.id = i.product_id
             """;
 
         ReportSummary reportSummary = jdbcTemplate.queryForObject(sql, Map.of(), new BeanPropertyRowMapper<>(ReportSummary.class));
