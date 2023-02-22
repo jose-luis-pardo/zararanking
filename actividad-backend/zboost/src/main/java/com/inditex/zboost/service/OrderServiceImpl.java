@@ -4,6 +4,7 @@ import com.inditex.zboost.entity.Order;
 import com.inditex.zboost.entity.OrderDetail;
 import com.inditex.zboost.entity.ProductOrderItem;
 import com.inditex.zboost.exception.InvalidParameterException;
+import com.inditex.zboost.exception.NotFoundException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -64,12 +65,26 @@ public class OrderServiceImpl implements OrderService {
         // Escribe la query para recuperar la entidad OrderDetail por ID
         Map<String, Object> params = new HashMap<>();
         params.put("orderId", orderId);
-        OrderDetail orderDetail = null;
+        OrderDetail orderDetail = new OrderDetail();
+        String orderSQL = "SELECT * FROM ORDERS where id=:orderId";
+        List <Order> orders = jdbcTemplate.query(orderSQL, params, new BeanPropertyRowMapper<>(Order.class));
+        if(orders.size()<1)
+            throw new NotFoundException("orderId", "El pedido no existe.");
+
+        Order order = orders.get(0);
+
 
         // Una vez has conseguido recuperar los detalles del pedido, faltaria recuperar los productos que forman parte de el...
-        String productOrdersSql = "";
+        String productOrdersSql = "select p.id, p.name, p.price, p.category, p.image_url, oit.quantity FROM PRODUCTS p join order_items oit on p.id=oit.product_id where oit.order_id=:orderId";
         List<ProductOrderItem> products = jdbcTemplate.query(productOrdersSql, params, new BeanPropertyRowMapper<>(ProductOrderItem.class));
-
+        orderDetail.setItemsCount(products.size());
+        orderDetail.setDate(order.getDate());
+        orderDetail.setStatus(order.getStatus());
+        orderDetail.setId(order.getId());
+        Double totalPrice = 0d;
+        for(ProductOrderItem poi : products)
+            totalPrice+=poi.getPrice();
+        orderDetail.setTotalPrice(totalPrice);
         orderDetail.setProducts(products);
         return orderDetail;
     }
