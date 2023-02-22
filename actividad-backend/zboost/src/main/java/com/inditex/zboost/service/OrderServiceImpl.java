@@ -3,6 +3,7 @@ package com.inditex.zboost.service;
 import com.inditex.zboost.entity.Order;
 import com.inditex.zboost.entity.OrderDetail;
 import com.inditex.zboost.entity.ProductOrderItem;
+import com.inditex.zboost.exception.InvalidParameterException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,9 @@ public class OrderServiceImpl implements OrderService {
 
         Map<String, Object> params = new HashMap<>();
         params.put("limit", limit);
-
-        String sql = "";
+        if(limit<1 || limit>100)
+            throw new InvalidParameterException("limit", "El parámetro debe estar entre 1 y 100");
+        String sql = "Select id, date, status,  FROM orders ORDER BY date DESC LIMIT :limit ";
 
         return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(Order.class));
     }
