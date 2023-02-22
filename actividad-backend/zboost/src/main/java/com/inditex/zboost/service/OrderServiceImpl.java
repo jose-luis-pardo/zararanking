@@ -75,7 +75,8 @@ public class OrderServiceImpl implements OrderService {
 
 
         // Una vez has conseguido recuperar los detalles del pedido, faltaria recuperar los productos que forman parte de el...
-        String productOrdersSql = "select p.id, p.name, p.price, p.category, p.image_url, oit.quantity FROM PRODUCTS p join order_items oit on p.id=oit.product_id where oit.order_id=:orderId";
+        String productOrdersSql = "select p.id, p.name, p.price, p.category, p.image_url, oit.quantity FROM PRODUCTS p " +
+                "join order_items oit on p.id=oit.product_id where oit.order_id=:orderId";
         List<ProductOrderItem> products = jdbcTemplate.query(productOrdersSql, params, new BeanPropertyRowMapper<>(ProductOrderItem.class));
         orderDetail.setItemsCount(products.size());
         orderDetail.setDate(order.getDate());
@@ -83,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setId(order.getId());
         Double totalPrice = 0d;
         for(ProductOrderItem poi : products)
-            totalPrice+=poi.getPrice();
+            totalPrice+=poi.getPrice()*poi.getQuantity();
         orderDetail.setTotalPrice(totalPrice);
         orderDetail.setProducts(products);
         return orderDetail;
